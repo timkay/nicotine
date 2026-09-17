@@ -1,0 +1,10 @@
+/build/*
+!/build/nicotine
+!/build/clock-app
+!/build/clock-gtk.so
+!/build/clock-qt.so
+!/build/libnicotine-qt.so
+!/build/SHA256SUMS
+!/build/BUILDINFO.json
+__pycache__/
+*.pyc

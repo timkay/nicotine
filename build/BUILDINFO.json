@@ -1,0 +1,156 @@
+{
+  "format": 1,
+  "platform": "Linux",
+  "architecture": "x86_64",
+  "libc": [
+    "glibc",
+    "2.43"
+  ],
+  "compiler": "cc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+  "quickjs": "2026-06-04",
+  "artifacts": {
+    "nicotine": {
+      "bytes": 678120,
+      "sha256": "51ca10db1e6fd2c01dfd84591b597fc164532c820eb909419e3cc7268d1ad91f",
+      "needed": [
+        "libffi.so.8",
+        "libcurl-gnutls.so.4",
+        "libm.so.6",
+        "libc.so.6"
+      ],
+      "glibc_versions": [
+        "GLIBC_2.17",
+        "GLIBC_2.2.5",
+        "GLIBC_2.29",
+        "GLIBC_2.3.2",
+        "GLIBC_2.3.4",
+        "GLIBC_2.34",
+        "GLIBC_2.35",
+        "GLIBC_2.38",
+        "GLIBC_2.4"
+      ]
+    },
+    "clock-app": {
+      "bytes": 698798,
+      "sha256": "b6b29044aecc3af8b34a44de8a1823f8e8c005fe2eb8ab9cea17c4e46722e3ac",
+      "needed": [
+        "libffi.so.8",
+        "libcurl-gnutls.so.4",
+        "libm.so.6",
+        "libc.so.6"
+      ],
+      "glibc_versions": [
+        "GLIBC_2.17",
+        "GLIBC_2.2.5",
+        "GLIBC_2.29",
+        "GLIBC_2.3.2",
+        "GLIBC_2.3.4",
+        "GLIBC_2.34",
+        "GLIBC_2.35",
+        "GLIBC_2.38",
+        "GLIBC_2.4"
+      ]
+    },
+    "clock-gtk.so": {
+      "bytes": 14536,
+      "sha256": "2b742871f2deb95c7bc79898c5fbef29a8f3e13860050b09f33556c24c536dbb",
+      "needed": [
+        "libgtk-3.so.0",
+        "libgobject-2.0.so.0",
+        "libglib-2.0.so.0",
+        "libc.so.6"
+      ],
+      "glibc_versions": [
+        "GLIBC_2.2.5",
+        "GLIBC_2.4"
+      ]
+    },
+    "clock-qt.so": {
+      "bytes": 18928,
+      "sha256": "c3a627e51583237a5efd95f6b74fc2eed8812542a836fea92bdf2a24ce778529",
+      "needed": [
+        "libQt6Widgets.so.6",
+        "libQt6Core.so.6",
+        "libstdc++.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "glibc_versions": [
+        "GLIBC_2.2.5",
+        "GLIBC_2.4"
+      ]
+    },
+    "libnicotine-qt.so": {
+      "bytes": 35728,
+      "sha256": "4aa9b800b2d6ef218cc0045ff5ab82c9eab3daa2af6f23c5b4064a7eac07c385",
+      "needed": [
+        "libQt6Widgets.so.6",
+        "libQt6Gui.so.6",
+        "libQt6Core.so.6",
+        "libstdc++.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "glibc_versions": [
+        "GLIBC_2.2.5",
+        "GLIBC_2.4"
+      ]
+    }
+  },
+  "source_sha256": {
+    "src/clock_gtk.c": "6637616ed608d6011189b58a6e797aaee62b36b71b0e6fcd71cfd7417c9983b4",
+    "src/clock_macos.m": "fa2902583a6671ac5405a477b8d19a76ce97e56fb16d13271a823e960815b931",
+    "src/clock_qt.cpp": "a08015cf5fd1b9c75ee24c6829fb06ab6291e9b71c1e3b467da4f21fb753f683",
+    "src/clock_ui.h": "6c0da17fba54d626713cb0588725cae4dd532b31b309d2f40a14e30378a147ff",
+    "src/clock_win32.c": "e840aa3ea42d24f6fd01d00b8aa5a182a287a3e816996fae0c493423f9ccee60",
+    "src/platform.h": "530b91561be5084c83216ecbdf5efa6e175cb7905521bbe78f580027e808a916",
+    "src/platform_posix.c": "c602c9691d5a4a13ab6baf19db8e75a23a4f98357292be9f62bb4d071cb6c255",
+    "src/platform_windows.c": "14ebb69adbd31e4c33898dfb7e3e9a3b9baf309fc48521a67c25143474e26a99",
+    "src/qt_adapter.cpp": "9716d67fb3d344af79c79347d6116090c6922345b891202b9c6dfc2aef71fd70",
+    "src/runtime.c": "7453ce5bbbc93b2acba92911bfcaf677102ec1b34b6990212644f18323626d3a",
+    "js/bootstrap.js": "da2e3b43b75a5810d4f037ae3d091afd1c174ce753eee9b6c9b27039ed92a08b",
+    "examples/clock.js": "0ff5810cd25eb5497a05913160ef5381a36b59b61026019114c763f0c022069f",
+    "examples/native_clock.js": "b30f20de50dfecdfca2cf9c1f69e80617a299af8d742eed65290c478d5db0bc8",
+    "tools/build_gui.py": "ef8991b5fd51279015ea69340b1088ec90104966fe422736f47fa422f61ed5e8",
+    "tools/embed.py": "c14d13c7543d19e0373dc05e724164740effd7399678de9fba99fabe2e34946d",
+    "tools/package.py": "d2c750f233788cf233efb55c2661cb892a7c50c85b030c63c5fa9874cea76c4f",
+    "tools/run_clock.py": "cda9c3303a5d60a175f94d0de43293f0763c262a9eb4882561d900b68c5ca6a2",
+    "tools/write_build_manifest.py": "345417f589e36022bf2eb8615c5a048b8f724230c1b5b2c4828a68f31528244b",
+    "tests/native_fixture.c": "7b22bff063e8354b0cd09505a464f6dfde0081eeb9f2cdb2e95aec465ff87e82",
+    "tests/test_gui.py": "4a23f2bf9682cfbea52e6789d2f7c07718af49e5d91bc02d2358d8fe73819c93",
+    "tests/test_runtime.py": "6d1080ed126cb88d585b51907d4c5eece0fcec27c881203a13d86da9db75dae3",
+    "vendor/quickjs/LICENSE": "598fd7fc928e4350abce36e337ba5a1346923c5c692f5be92c3d8e29ddd7c18d",
+    "vendor/quickjs/VERSION": "234057c4079458cba9862d4bbb6f8a059ac2e4a194947673da0ad38ca16a37fd",
+    "vendor/quickjs/cutils.c": "b73a403a59da30726257ddbdf5e399298941c1def997782ee0d4d33f796a80a2",
+    "vendor/quickjs/cutils.h": "d2da6d06a75b9e6c116c82b7a41df6bcc170c8b1779f374fa953ecf688eda647",
+    "vendor/quickjs/dtoa.c": "af5abd68fa9806d1a19bdd5f2daef00d5fd0990ae56311382dfed4700343f074",
+    "vendor/quickjs/dtoa.h": "462070f7678a894b9f3612422f280f4dce412eb360a5cc585a513f407fc23114",
+    "vendor/quickjs/libregexp-opcode.h": "2a98d646089f3a72f25480116297c5fdb5b28fd9f815447273951f4ade4a115e",
+    "vendor/quickjs/libregexp.c": "fdfcf86167029ab2c39c35730d4ae6875b7bbeb9406a0fcc886de4e9b1f5e2ac",
+    "vendor/quickjs/libregexp.h": "f5c5ef1899f224dcc718422a22c789ef9d8b5b837b622818fcfaf681ae793446",
+    "vendor/quickjs/libunicode-table.h": "cf782bc7a07549e976f606bd3cb8555858482b279574554dcb8d46412986006c",
+    "vendor/quickjs/libunicode.c": "26203ae888c0582e7d0e2113f13db0c9b39dc7b0b3836d68fa308c54f7a0898c",
+    "vendor/quickjs/libunicode.h": "ce310152bc80d7415dcb657e23abd9a40bf83e393c0d05d325dae384bb01d259",
+    "vendor/quickjs/list.h": "181c6b25d9d0e4853315d36a6e6fab3b2c3554271693d898a439384ba0f67c2b",
+    "vendor/quickjs/qjs.c": "dc855952aaf58e9db1d091225d28439b1f832412e156a1968a9504935cd4e448",
+    "vendor/quickjs/qjsc.c": "e3e44bef9930982232d8c7dba71df7bd370b0a00ef1738fa9ab39b477e23bb0c",
+    "vendor/quickjs/quickjs-atom.h": "342194359417664e652f54e7d682ee2ef91dd982e91f74decbde992a2c848236",
+    "vendor/quickjs/quickjs-libc.c": "8c6c42619ab4edf1548b051c73bb2bee670003415b1de30d2910d71917859bce",
+    "vendor/quickjs/quickjs-libc.h": "cfb4a6ab9533461a8abf8083f7d9f9a84d6bb26c92a7dd718984a7a1ddd754eb",
+    "vendor/quickjs/quickjs-opcode.h": "a9c60a8c9366820733d9d2acbb805f48b2e9e2778df526e6bcb845fdb6b47834",
+    "vendor/quickjs/quickjs.c": "a00762d2eee42316cecbc9c15efc4549b715ec500461845cd91b2a6c38190d08",
+    "vendor/quickjs/quickjs.h": "2165f47772af9faee1798999a599fa9de850d1bf0259502dade1c25d4a588316",
+    "vendor/quickjs/repl.c": "c946c81a2be8632467459be1fe094982c28dc6eac296b24b0b7c3cdf2f2782b1",
+    "vendor/quickjs/run-test262.c": "58f37e301f36b2b630a247d59105fc373953340c691667b28822cd703d8f203e",
+    "vendor/quickjs/unicode_gen.c": "a86452d73a5dca52a1561cc7cb40ded704fcc2cba1f74676cc7102b428396ca8",
+    "vendor/quickjs/unicode_gen_def.h": "0c30cfd5dd29d7708f6e0045cb2e3ed92207697bb2b5eece39f336db007a055f",
+    "Makefile": "588eab69cad7277a13b17b469b81fd31df8d11deb157066a7b053b3eac8d9018",
+    "CMakeLists.txt": "6d8cb8c727f29bb5f4d52accc910685e8d62670909e322fdad6a155269a2bf1b",
+    "run-clock": "4622951ae1cdea29982c0e32b509169053fc96bede3ef8f9eb9438dfa7c1c894"
+  },
+  "notes": [
+    "Binaries depend on the listed system shared libraries; these dependencies are not bundled.",
+    "Source hashes identify this snapshot, not a guarantee of byte-for-byte reproducible builds.",
+    "Windows and macOS ports are source-only and have not been validated on those platforms."
+  ]
+}
