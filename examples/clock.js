@@ -69,7 +69,7 @@
       line(cr,125+Math.cos(a)*inner,125+Math.sin(a)*inner,125+Math.cos(a)*outer,125+Math.sin(a)*outer,major?2:.875,'5b3e1a',major?.58:.24);
     }
     const d=A.includes('--fixed-time')?new Date(2026,8,17,10,9,30):new Date();
-    for(const [fraction,length] of [[(d.getHours()+d.getMinutes()/60)/12,.375],[(d.getMinutes()+d.getSeconds()/60)/60,.75],[d.getSeconds()/60,.95]]) {
+    for(const [fraction,length] of [[(d.getHours()+d.getMinutes()/60)/12,.375],[(d.getMinutes()+d.getSeconds()/60)/60,.72],[d.getSeconds()/60,.90]]) {
       const a=fraction*2*Math.PI-Math.PI/2;
       line(cr,125,125,125+125*length*Math.cos(a),125+125*length*Math.sin(a),4.2,'cc0000',.53);
     }
@@ -81,9 +81,8 @@
       if(state.split)text(cr,elapsed(),125,179,14.6,'282318',false);
       line(cr,120,191,130,201,2,'7a3d27');line(cr,130,191,120,201,2,'7a3d27');
     }
-    for(const x of [45,205]){circle(cr,x,45,11);color(cr,'ffffff',.8);C.fill(cr);}
+    circle(cr,45,45,11);color(cr,'ffffff',.8);C.fill(cr);
     for(let y=41;y<=49;y+=4)line(cr,40,y,50,y,1.2,'3d3525');
-    line(cr,201,41,209,49,1.3,'3d3525');line(cr,209,41,201,49,1.3,'3d3525');
     text(cr,'v0.7.15 · native',125,232,7,'6b6045',false);
     if(state.menu) {
       C.rect(cr,36,60,178,143);color(cr,'2c261c',.97);C.fill(cr);
@@ -110,7 +109,6 @@
   function click(x,y) {
     const size=Math.min(width,height);x=(x-(width-size)/2)*250/size;y=(y-(height-size)/2)*250/size;
     if(state.overlay){state.overlay='';state.notice='';return;}
-    if(Math.hypot(x-205,y-45)<=13){quit();return;}
     if(Math.hypot(x-45,y-45)<=13){state.menu=!state.menu;return;}
     if(state.menu) {
       if(x>=36 && x<=214 && y>=82 && y<197) {
