@@ -119,9 +119,11 @@
 
   function windowsWindow() {
     check(Native.pointerSize === 8, 'This Win32 example requires a 64-bit runtime');
-    const user = Native.library('user32.dll');
-    const kernel = Native.library('kernel32.dll');
-    const gdi = Native.library('gdi32.dll');
+    // These names keep the Win32 API groups readable; all calls use the
+    // runtime's ordered native-library search list.
+    const user = native;
+    const kernel = native;
+    const gdi = native;
     // Windows W APIs consume UTF-16, not the FFI's temporary UTF-8 strings.
     function wide(text) {
       const buffer = Native.buffer((text.length + 1) * 2);
@@ -239,9 +241,9 @@
     check(Native.pointerSize === 8, 'This Cocoa example requires a 64-bit runtime');
     // Loading AppKit registers its Objective-C classes. NSApplicationLoad is
     // an ordinary exported C function, resolved on its first call.
-    const appKit = Native.library('/System/Library/Frameworks/AppKit.framework/AppKit');
+    const appKit = native;
     check(appKit.NSApplicationLoad.returns('u8')(), 'Cannot initialize AppKit');
-    const runtime = Native.library('/usr/lib/libobjc.A.dylib');
+    const runtime = native;
     function classPointer(name) {
       const pointer = runtime.objc_getClass.returns('ptr')(name);
       check(!Native.isNull(pointer), `Missing Objective-C class ${name}`);
