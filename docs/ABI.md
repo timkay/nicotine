@@ -5,22 +5,31 @@
 is monotonic milliseconds. JSON and RegExp are standard QuickJS built-ins.
 
 ```js
-const lib = Native.library('library-path');
-const result = lib.exported_function(42); // resolve once, infer arguments
-const pointer = lib.create_object.returns('ptr')();
-const precise = lib.some_function.as('f64', 'ptr', 'f64');
+const result = native.exported_function(42); // search standard libraries
+const pointer = native.ptr.create_object();
+const precise = native.f64.some_function; // return type is on the left
 precise(pointer, 1.25);
 ```
 
+`native` searches the platform's ordered standard-library list. An app can
+provide another ordered list with `native.search(['library-a', 'library-b'])`;
+the first library exporting a symbol supplies the call. `Native.library(path)`
+remains available when a symbol collision must be qualified. The runtime opens
+and searches libraries only when a symbol is first used.
+
 Supported types: `void` (results only), `i32`, `u32`, `i64`, `u64`, `ptr`,
-`str` (UTF-8), `f32`, `f64`. No global library search is performed; the source
-names a library explicitly. Symbol wrappers and inferred signatures are cached.
+`str` (UTF-8), `f32`, `f64`. Symbol wrappers and inferred signatures are
+installed on first use.
 
 Integers within signed int32 range infer i32; booleans infer i32; BigInt
 infers i64; string infers str; null, native pointers, and ArrayBuffers infer
 ptr. Other numbers require `Native.f32`, `Native.f64`, or `Native.u32`.
 Explicit `.as` bindings convert according to their supplied signature.
-Results default to i32; use `.returns` or `.as` when that is incorrect.
+Results default to i32. Use `native.ptr.function(...)`,
+`native.f64.function(...)`, or another fixed type namespace when the result is
+not an i32. The equivalent `.returns('ptr')` form remains available for
+generated or compatibility code. `.as(result, ...types)` is the escape hatch
+for a complete explicit signature.
 
 ```js
 const output = Native.buffer(8);

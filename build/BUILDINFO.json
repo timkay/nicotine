@@ -10,8 +10,8 @@
   "quickjs": "2026-06-04",
   "artifacts": {
     "nicotine": {
-      "bytes": 678120,
-      "sha256": "51ca10db1e6fd2c01dfd84591b597fc164532c820eb909419e3cc7268d1ad91f",
+      "bytes": 690408,
+      "sha256": "1ba03f31e747e32ba2b7369d274b785ddfaea3212f1ea3a72a8532a1b6f435e5",
       "needed": [
         "libffi.so.8",
         "libcurl-gnutls.so.4",
@@ -31,8 +31,8 @@
       ]
     },
     "clock-app": {
-      "bytes": 698645,
-      "sha256": "4c449811f7af17fba5c83e73daa6672cd3a4a1cccce165b0f3cf16d1b844c3f5",
+      "bytes": 710933,
+      "sha256": "bf2c5ea67dd4b422eefc3cdb2f59d9ef0c80fd90ddf92aa65493d1aa7e4abc8d",
       "needed": [
         "libffi.so.8",
         "libcurl-gnutls.so.4",
@@ -107,18 +107,18 @@
     "src/platform_posix.c": "c602c9691d5a4a13ab6baf19db8e75a23a4f98357292be9f62bb4d071cb6c255",
     "src/platform_windows.c": "14ebb69adbd31e4c33898dfb7e3e9a3b9baf309fc48521a67c25143474e26a99",
     "src/qt_adapter.cpp": "9716d67fb3d344af79c79347d6116090c6922345b891202b9c6dfc2aef71fd70",
-    "src/runtime.c": "7453ce5bbbc93b2acba92911bfcaf677102ec1b34b6990212644f18323626d3a",
-    "js/bootstrap.js": "da2e3b43b75a5810d4f037ae3d091afd1c174ce753eee9b6c9b27039ed92a08b",
+    "src/runtime.c": "64313f266cbf4eead82e9d3aa0f2c3f25d83a4c2cc6192774f8c771398ad9cfa",
+    "js/bootstrap.js": "28712fd05558a24db04b93aaa0745a2e3cebb9d620a4a75eac5c76d7c784f04e",
     "examples/clock.js": "a1954e10367278fed84a4c051694e31a177bbe8645bbf451718c9667cdf93361",
-    "examples/native_clock.js": "b30f20de50dfecdfca2cf9c1f69e80617a299af8d742eed65290c478d5db0bc8",
+    "examples/native_clock.js": "2d2b5406fe7457397583efcdd05070a77c69f7ed69d43936f10b15063a62618f",
     "tools/build_gui.py": "ef8991b5fd51279015ea69340b1088ec90104966fe422736f47fa422f61ed5e8",
     "tools/embed.py": "c14d13c7543d19e0373dc05e724164740effd7399678de9fba99fabe2e34946d",
     "tools/package.py": "d2c750f233788cf233efb55c2661cb892a7c50c85b030c63c5fa9874cea76c4f",
     "tools/run_clock.py": "cda9c3303a5d60a175f94d0de43293f0763c262a9eb4882561d900b68c5ca6a2",
     "tools/write_build_manifest.py": "345417f589e36022bf2eb8615c5a048b8f724230c1b5b2c4828a68f31528244b",
-    "tests/native_fixture.c": "7b22bff063e8354b0cd09505a464f6dfde0081eeb9f2cdb2e95aec465ff87e82",
-    "tests/test_gui.py": "4a23f2bf9682cfbea52e6789d2f7c07718af49e5d91bc02d2358d8fe73819c93",
-    "tests/test_runtime.py": "6d1080ed126cb88d585b51907d4c5eece0fcec27c881203a13d86da9db75dae3",
+    "tests/native_fixture.c": "ea1153810c3b9ba9501e5d799ceca3afc4342297f9ae025845cd70ce2535f0e0",
+    "tests/test_gui.py": "f9ac2c1bebf00beb928f2670b7cc8519dc12068b33af6cfeda71c72ae9981f0b",
+    "tests/test_runtime.py": "b88eae393b805bfc48f663f611ecbf9325613f02e2d491664a19c499be627757",
     "vendor/quickjs/LICENSE": "598fd7fc928e4350abce36e337ba5a1346923c5c692f5be92c3d8e29ddd7c18d",
     "vendor/quickjs/VERSION": "234057c4079458cba9862d4bbb6f8a059ac2e4a194947673da0ad38ca16a37fd",
     "vendor/quickjs/cutils.c": "b73a403a59da30726257ddbdf5e399298941c1def997782ee0d4d33f796a80a2",

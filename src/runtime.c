@@ -11,10 +11,18 @@
 
 #define MAX_ARGS 32
 #define MAX_SOURCE (16u * 1024u * 1024u)
-typedef enum { VOID, I32, U32, I64, U64, PTR, STR, F32, F64 } Type;
-typedef union { int32_t i32; uint32_t u32; int64_t i64; uint64_t u64; void *ptr; float f32; double f64; ffi_arg word; } Slot;
+#define MAX_STRUCT_BYTES 256
+#define MAX_STRUCT_NODES 64
+typedef enum { VOID, I32, U32, I64, U64, PTR, STR, F32, F64, I8, U8, STRUCT } Type;
+typedef struct StructType {
+    ffi_type type;
+    ffi_type *fields[MAX_ARGS + 1];
+    struct StructType *next;
+} StructType;
+typedef union { int8_t i8; unsigned char structure[MAX_STRUCT_BYTES]; uint8_t u8; int32_t i32; uint32_t u32; int64_t i64; uint64_t u64; void *ptr; float f32; double f64; ffi_arg word; } Slot;
 typedef struct Binding {
     ffi_cif cif; ffi_type *types[MAX_ARGS]; Type args[MAX_ARGS], result;
+    StructType *structures; unsigned structure_count;
     unsigned count; void *address; struct Binding *next;
 } Binding;
 typedef struct Callback {
@@ -42,10 +50,11 @@ static JSValue pointer(JSContext *ctx, void *p) {
     return obj;
 }
 static Type parse_type(JSContext *ctx, JSValueConst v) {
+    if (JS_IsArray(ctx,v)) return STRUCT;
     const char *s = JS_ToCString(ctx,v);
-    static const char *names[] = {"void","i32","u32","i64","u64","ptr","str","f32","f64"};
+    static const char *names[] = {"void","i32","u32","i64","u64","ptr","str","f32","f64","i8","u8"};
     int found = -1;
-    if (s) { for (int i=0;i<9;i++) if (!strcmp(names[i],s)) found=i; JS_FreeCString(ctx,s); }
+    if (s) { for (int i=0;i<11;i++) if (!strcmp(names[i],s)) found=i; JS_FreeCString(ctx,s); }
     return (Type)found;
 }
 static ffi_type *ffi_for(Type type) {
@@ -53,30 +62,89 @@ static ffi_type *ffi_for(Type type) {
       case VOID:return &ffi_type_void; case I32:return &ffi_type_sint32;
       case U32:return &ffi_type_uint32; case I64:return &ffi_type_sint64;
       case U64:return &ffi_type_uint64; case PTR:case STR:return &ffi_type_pointer;
+      case I8:return &ffi_type_sint8; case U8:return &ffi_type_uint8;
       case F32:return &ffi_type_float; case F64:return &ffi_type_double;
       default:return NULL;
     }
 }
+static void free_structures(Binding *binding) {
+    while (binding->structures) {
+        StructType *node = binding->structures;
+        binding->structures = node->next;
+        free(node);
+    }
+}
+/* libffi owns ABI layout decisions; descriptors contain fields, never offsets.
+ * Bound depth/node/byte counts also reject cyclic or pathological descriptors. */
+static ffi_type *descriptor(JSContext *ctx, Binding *binding, JSValueConst value, unsigned depth) {
+    Type type = parse_type(ctx,value);
+    if (type != STRUCT) return ffi_for(type);
+    if (depth >= 8 || binding->structure_count >= MAX_STRUCT_NODES) return NULL;
+    JSValue length = JS_GetPropertyStr(ctx,value,"length");
+    uint32_t count;
+    int rc = JS_ToUint32(ctx,&count,length);
+    JS_FreeValue(ctx,length);
+    if (rc || !count || count > MAX_ARGS) return NULL;
+    StructType *node = calloc(1,sizeof(*node));
+    if (!node) return NULL;
+    node->next = binding->structures;
+    binding->structures = node;
+    binding->structure_count++;
+    node->type.type = FFI_TYPE_STRUCT;
+    node->type.elements = node->fields;
+    for (unsigned i=0;i<count;i++) {
+        JSValue field = JS_GetPropertyUint32(ctx,value,i);
+        Type field_type = parse_type(ctx,field);
+        node->fields[i] = descriptor(ctx,binding,field,depth+1);
+        JS_FreeValue(ctx,field);
+        if (!node->fields[i] || field_type == VOID || field_type == STR) return NULL;
+    }
+    if (ffi_get_struct_offsets(FFI_DEFAULT_ABI,&node->type,NULL) != FFI_OK ||
+        node->type.size > MAX_STRUCT_BYTES) return NULL;
+    return &node->type;
+}
 static int signature(JSContext *ctx, Binding *b, JSValueConst ret, JSValueConst types) {
     b->result = parse_type(ctx,ret);
-    if (!ffi_for(b->result) || !JS_IsArray(ctx,types)) goto bad;
+    ffi_type *result = descriptor(ctx,b,ret,0);
+    if (!result || !JS_IsArray(ctx,types)) goto bad;
     JSValue length=JS_GetPropertyStr(ctx,types,"length");
     uint32_t n; int rc=JS_ToUint32(ctx,&n,length); JS_FreeValue(ctx,length);
     if (rc || n>MAX_ARGS) goto bad;
     b->count=n;
     for (unsigned i=0;i<n;i++) {
         JSValue v=JS_GetPropertyUint32(ctx,types,i);
-        b->args[i]=parse_type(ctx,v); JS_FreeValue(ctx,v);
-        b->types[i]=ffi_for(b->args[i]);
+        b->args[i]=parse_type(ctx,v);
+        b->types[i]=descriptor(ctx,b,v,0);
+        JS_FreeValue(ctx,v);
         if (!b->types[i] || b->args[i]==VOID) goto bad;
     }
-    if (ffi_prep_cif(&b->cif,FFI_DEFAULT_ABI,n,ffi_for(b->result),b->types)!=FFI_OK) goto bad;
+    if (ffi_prep_cif(&b->cif,FFI_DEFAULT_ABI,n,result,b->types)!=FFI_OK) goto bad;
     return 0;
-bad: JS_ThrowTypeError(ctx,"Invalid native signature (maximum 32 arguments)"); return -1;
+bad:
+    free_structures(b);
+    JS_ThrowTypeError(ctx,"Invalid native signature (32 arguments, 256-byte structures, depth 8)");
+    return -1;
 }
-static int to_slot(JSContext *ctx, Type type, JSValueConst v, Slot *out, const char **string) {
+static int to_slot(JSContext *ctx, Type type, ffi_type *layout, JSValueConst v, Slot *out, const char **string) {
     switch(type) {
       case VOID:return 0;
+      case I8:case U8: {
+        int32_t value;
+        if (JS_ToInt32(ctx,&value,v)) return -1;
+        out->u8=(uint8_t)value;
+        return 0;
+      }
+      case STRUCT: {
+        size_t size;
+        uint8_t *bytes=JS_GetArrayBuffer(ctx,&size,v);
+        if (!bytes) return -1;
+        if (size != layout->size) {
+            JS_ThrowTypeError(ctx,"Structure buffer must match native layout size (%zu)",layout->size);
+            return -1;
+        }
+        memcpy(out->structure,bytes,size);
+        return 0;
+      }
       case I32:return JS_ToInt32(ctx,&out->i32,v);
       case U32:return JS_ToUint32(ctx,&out->u32,v);
       case I64:case U64:return JS_ToBigInt64(ctx,&out->i64,v);
@@ -93,9 +161,12 @@ static int to_slot(JSContext *ctx, Type type, JSValueConst v, Slot *out, const c
       default:return -1;
     }
 }
-static JSValue from_slot(JSContext *ctx, Type type, const void *p) {
+static JSValue from_slot(JSContext *ctx, Type type, ffi_type *layout, const void *p) {
     switch(type) {
       case VOID:return JS_UNDEFINED;
+      case I8:return JS_NewInt32(ctx,*(const int8_t*)p);
+      case U8:return JS_NewUint32(ctx,*(const uint8_t*)p);
+      case STRUCT:return JS_NewArrayBufferCopy(ctx,p,layout->size);
       case I32:return JS_NewInt32(ctx,*(const int32_t*)p);
       case U32:return JS_NewUint32(ctx,*(const uint32_t*)p);
       case I64:return JS_NewBigInt64(ctx,*(const int64_t*)p);
@@ -114,14 +185,14 @@ static JSValue invoke(JSContext *ctx, JSValueConst self,int argc,JSValueConst *a
     int failed=0;
     for(unsigned i=0;i<b->count;i++) {
         values[i]=&slots[i];
-        if(to_slot(ctx,b->args[i],argv[i],&slots[i],&strings[i])) { failed=1; break; }
+        if(to_slot(ctx,b->args[i],b->types[i],argv[i],&slots[i],&strings[i])) { failed=1; break; }
     }
     if(!failed) ffi_call(&b->cif,FFI_FN(b->address),&result,values);
     for(unsigned i=0;i<b->count;i++) if(strings[i]) JS_FreeCString(ctx,strings[i]);
     if(failed) return JS_EXCEPTION;
     if(!JS_IsUndefined(callback_error)) { JSValue e=callback_error;callback_error=JS_UNDEFINED;return JS_Throw(ctx,e); }
     if(atomic_exchange(&foreign_callback,0)) return JS_ThrowInternalError(ctx,"Native callback arrived on a foreign thread");
-    return from_slot(ctx,b->result,&result);
+    return from_slot(ctx,b->result,b->cif.rtype,&result);
 }
 static JSValue host_open(JSContext *ctx,JSValueConst self,int argc,JSValueConst *argv) {
     if(argc!=1) return JS_ThrowTypeError(ctx,"library(path) requires a path");
@@ -154,14 +225,16 @@ static void dispatch_callback(ffi_cif *cif,void *result,void **args,void *opaque
     if(b->result!=VOID) memset(result,0,cif->rtype->size<sizeof(ffi_arg)?sizeof(ffi_arg):cif->rtype->size);
     if(!n_thread_equal(n_thread_self(),owner)) { atomic_store(&foreign_callback,1);return; }
     JSValue values[MAX_ARGS];
-    for(unsigned i=0;i<b->count;i++) values[i]=from_slot(context,b->args[i],args[i]);
+    for(unsigned i=0;i<b->count;i++) values[i]=from_slot(context,b->args[i],b->types[i],args[i]);
     JSValue value=JS_Call(context,cb->fn,JS_UNDEFINED,b->count,values);
     for(unsigned i=0;i<b->count;i++) JS_FreeValue(context,values[i]);
     if(!JS_IsException(value) && b->result!=VOID) {
         Slot slot={0};const char *s=NULL;
-        if(to_slot(context,b->result,value,&slot,&s)) { JS_FreeValue(context,value);value=JS_EXCEPTION; }
+        if(to_slot(context,b->result,b->cif.rtype,value,&slot,&s)) { JS_FreeValue(context,value);value=JS_EXCEPTION; }
         else {
-            if(b->result==I32) *(ffi_sarg*)result=slot.i32;
+            if(b->result==I8) *(ffi_sarg*)result=slot.i8;
+            else if(b->result==U8) *(ffi_arg*)result=slot.u8;
+            else if(b->result==I32) *(ffi_sarg*)result=slot.i32;
             else if(b->result==U32) *(ffi_arg*)result=slot.u32;
             else memcpy(result,&slot,cif->rtype->size);
         }
@@ -176,13 +249,29 @@ static JSValue host_callback(JSContext *ctx,JSValueConst self,int argc,JSValueCo
     if(argc!=3 || !JS_IsFunction(ctx,argv[2])) return JS_ThrowTypeError(ctx,"callback(result, types, function)");
     Callback *cb=calloc(1,sizeof(*cb)); if(!cb) return JS_ThrowOutOfMemory(ctx);
     if(signature(ctx,&cb->binding,argv[0],argv[1])) {free(cb);return JS_EXCEPTION;}
-    if(cb->binding.result==STR) {free(cb);return JS_ThrowTypeError(ctx,"String callback results need explicit native storage");}
+    if(cb->binding.result==STR) {free_structures(&cb->binding);free(cb);return JS_ThrowTypeError(ctx,"String callback results need explicit native storage");}
     cb->closure=ffi_closure_alloc(sizeof(ffi_closure),&cb->code);
-    if(!cb->closure) {free(cb);return JS_ThrowOutOfMemory(ctx);}
+    if(!cb->closure) {free_structures(&cb->binding);free(cb);return JS_ThrowOutOfMemory(ctx);}
     if(ffi_prep_closure_loc(cb->closure,&cb->binding.cif,dispatch_callback,cb,cb->code)!=FFI_OK) {
-        ffi_closure_free(cb->closure);free(cb);return JS_ThrowInternalError(ctx,"Cannot create native callback");
+        ffi_closure_free(cb->closure);free_structures(&cb->binding);free(cb);return JS_ThrowInternalError(ctx,"Cannot create native callback");
     }
     cb->fn=JS_DupValue(ctx,argv[2]);cb->next=callbacks;callbacks=cb;return pointer(ctx,cb->code);
+}
+/* Addresses are explicit ABI values, not ownership transfers. The app must
+ * keep backing buffers alive while native code retains their addresses. */
+static JSValue host_address(JSContext *ctx,JSValueConst self,int argc,JSValueConst *argv) {
+    Slot slot={0}; const char *unused=NULL;
+    if (argc!=1) return JS_ThrowTypeError(ctx,"address requires a pointer or buffer");
+    if (to_slot(ctx,PTR,&ffi_type_pointer,argv[0],&slot,&unused)) return JS_EXCEPTION;
+    return JS_NewBigUint64(ctx,(uintptr_t)slot.ptr);
+}
+static JSValue host_pointer(JSContext *ctx,JSValueConst self,int argc,JSValueConst *argv) {
+    int64_t address;
+    if (argc!=1 || !JS_IsBigInt(ctx,argv[0])) return JS_ThrowTypeError(ctx,"pointer requires a BigInt address");
+    if (JS_ToBigInt64(ctx,&address,argv[0])) return JS_EXCEPTION;
+    if (sizeof(void*)<8 && (uint64_t)address>UINTPTR_MAX)
+        return JS_ThrowRangeError(ctx,"Address exceeds native pointer width");
+    return pointer(ctx,(void*)(uintptr_t)address);
 }
 static JSValue host_is_pointer(JSContext *ctx,JSValueConst self,int argc,JSValueConst *argv) {
     return JS_NewBool(ctx,argc && JS_GetOpaque(argv[0],pointer_class)!=NULL);
@@ -287,6 +376,8 @@ int main(int argc,char **argv) {
     JS_SetPropertyStr(context,host,"platform",JS_NewString(context,N_PLATFORM));
 #define ADD(name,fn,n) JS_SetPropertyStr(context,host,name,JS_NewCFunction(context,fn,name,n))
     ADD("open",host_open,1);ADD("symbol",host_symbol,2);ADD("bind",host_bind,3);
+    ADD("address",host_address,1);ADD("pointer",host_pointer,1);
+    JS_SetPropertyStr(context,host,"pointerSize",JS_NewInt32(context,sizeof(void*)));
     ADD("callback",host_callback,3);ADD("isPointer",host_is_pointer,1);ADD("isNull",host_is_null,1);
     ADD("now",host_now,0);ADD("print",host_print,1);ADD("fetch",host_fetch,1);ADD("pump",host_pump,0);
     JS_SetPropertyStr(context,global,"__host",host);JS_FreeValue(context,global);
@@ -309,9 +400,9 @@ int main(int argc,char **argv) {
     JS_FreeValue(context,result);JS_FreeValue(context,callback_error);
     while(requests) {Request *r=requests;requests=r->next;n_thread_join(r->thread);
         JS_FreeValue(context,r->resolve);JS_FreeValue(context,r->reject);free(r->response.body);free(r->url);free(r);}
-    while(callbacks) {Callback *c=callbacks;callbacks=c->next;JS_FreeValue(context,c->fn);ffi_closure_free(c->closure);free(c);}
+    while(callbacks) {Callback *c=callbacks;callbacks=c->next;JS_FreeValue(context,c->fn);ffi_closure_free(c->closure);free_structures(&c->binding);free(c);}
     JS_FreeContext(context);JS_FreeRuntime(rt);
-    while(bindings) {Binding *b=bindings;bindings=b->next;free(b);}
+    while(bindings) {Binding *b=bindings;bindings=b->next;free_structures(b);free(b);}
     while(libraries) {Library *l=libraries;libraries=l->next;n_library_close(l->handle);free(l);}
     n_cleanup();return status;
 }

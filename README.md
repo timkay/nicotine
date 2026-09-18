@@ -74,19 +74,21 @@ To render a PNG without opening a window:
 ./build/nicotine examples/clock.js --fixed-time --render build/clock.png
 ```
 
-The new cross-platform source example uses native labels and buttons with
-app-specific native GUI modules, not a general widget abstraction:
+The cross-platform source example calls each platform's GUI API directly.
+`native` searches the runtime's ordered standard-library list and installs a
+call method on first use. Return types are written on the left when needed:
 
 ```sh
 ./build/nicotine examples/native_clock.js
-./build/nicotine examples/native_clock.js --qt
 ```
 
-The shared JS owns stopwatch state, time formatting, and update logic.
-`src/clock_gtk.c`, `src/clock_qt.cpp`, `src/clock_win32.c`, and
-`src/clock_macos.m` own each platform's controls and event loop. Their small
-app-specific ABI is in `src/clock_ui.h`. This is a native-controls example,
-not a cross-platform port of the complete analog clock's drawing/menu UI.
+For example, the GTK source contains calls such as
+`native.ptr.gtk_window_new(0)` and `native.void.gtk_window_show(window)`.
+An app can provide a narrower search list with `native.search([...])`; use
+`Native.library(path)` only when a symbol collision needs explicit
+qualification. The shared JS owns stopwatch state, time formatting, and event
+handlers. The older `clock_*` modules remain optional ABI examples for testing
+platform-specific adapters; new apps do not need to compile one.
 
 ## Build and test on Linux
 
@@ -151,14 +153,20 @@ If libffi is outside the SDK, pass `-DFFI_INCLUDE_DIR=... -DFFI_LIBRARY=...`.
 ```sh
 cmake -S . -B build/macos -DCMAKE_BUILD_TYPE=MinSizeRel
 cmake --build build/macos
-./build/macos/nicotine examples/native_clock.js --library ./build/macos/clock-macos.dylib
+./build/macos/nicotine examples/native_clock.js
 ```
 
-Optional CMake switches `-DNICOTINE_GTK=ON` and `-DNICOTINE_QT=ON` build
-the respective native-controls module when its SDK is installed.
+Optional CMake switches `-DNICOTINE_GTK=ON` and `-DNICOTINE_QT=ON` build the
+legacy native-controls examples when their SDK is installed.
 The original `clock.js` uses Linux GTK/Cairo and is not the portable example.
 
 ## Source packages and review
+
+Application reviewability is a product requirement: use descriptive names,
+straightforward control flow, visible native bindings and external effects,
+and readable source that matches what executes. Prefer clarity over dense
+syntax. See [the app authoring requirements](docs/REVIEWABILITY.md); these
+guide implementation and review but are not enforced by the runtime.
 
 ```sh
 python3 tools/package.py pack build/nicotine examples/clock.js build/clock-app

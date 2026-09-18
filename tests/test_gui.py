@@ -22,7 +22,7 @@ try:
     display=os.read(read_fd,32).decode().strip()
     if not display:raise RuntimeError('Xvfb failed: '+server.stderr.read().decode())
     env={**os.environ,'DISPLAY':':'+display,'GDK_BACKEND':'x11','QT_QPA_PLATFORM':'offscreen','XDG_CONFIG_HOME':settings.name}
-    for app,options in [('clock.js',[]),('clock.js',['--qt']),('native_clock.js',[]),('native_clock.js',['--qt'])]:
+    for app,options in [('clock.js',[]),('clock.js',['--qt']),('native_clock.js',[])]:
         p=subprocess.run([str(ROOT/'build/nicotine'),'examples/'+app,'--self-test',*options],
                          cwd=ROOT,env=env,capture_output=True,text=True,timeout=10,check=True)
         assert 'self-test passed' in p.stdout,p.stdout
