@@ -143,7 +143,7 @@ upstream QuickJS sources are not configured for MSVC in this project.
 ```sh
 cmake -S . -B build/windows -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel
 cmake --build build/windows
-./build/windows/nicotine.exe examples/native_clock.js --library ./build/windows/clock-win32.dll
+./build/windows/nicotine.exe examples/native_clock.js --self-test
 ```
 
 macOS: use Xcode command-line tools, CMake, Python, libffi development files,
@@ -181,8 +181,9 @@ The source and runtime hashes must match the manifest; `--trusted-runtime`
 additionally compares the runtime bytes with the specified trusted binary.
 Outputs are created exclusively, avoiding accidental overwrites.
 
-This prototype handles one JS entry file. Platform GUI modules are separate
-artifacts, selected by `--library`, and are not covered by this manifest.
+This prototype handles one JS entry file. The legacy platform GUI modules are
+separate artifacts, selected by `--library`, and are not covered by this
+manifest. The portable `native_clock.js` example does not use them.
 There is no signing, certificate validation, installer, approved-runtime
 registry, or sandbox yet. The executable itself reads the source footer;
 the independent inspection step performs manifest/hash validation. Hashes
